@@ -31,9 +31,9 @@ func PackValidationData(authorizerMagic uint64, validUntil, validAfter uint64) [
 	return common.LeftPadBytes(t.Bytes(), 32)
 }
 
-func UnpackValidationData(validationData []byte) (authorizerMagic uint64, validUntil, validAfter uint64) {
+func UnpackValidationData(validationData []byte) (authorizerMagic string, validUntil, validAfter uint64) {
 
-	authorizerMagic = new(big.Int).SetBytes(validationData[:20]).Uint64()
+	authorizerMagic = common.Bytes2Hex(validationData[:20])
 	validUntil = new(big.Int).SetBytes(validationData[20:26]).Uint64()
 	validAfter = new(big.Int).SetBytes(validationData[26:32]).Uint64()
 	return
@@ -518,12 +518,18 @@ func validateAccountReturnData(data []byte) (uint64, uint64, error) {
 	}
 	magicExpected, validUntil, validAfter := UnpackValidationData(data)
 	//todo: we check first 8 bytes of the 20-byte address (the rest is expected to be zeros)
-	if magicExpected != MAGIC_VALUE_SENDER {
-		if magicExpected == MAGIC_VALUE_SIGFAIL {
+
+	var MAGIC_VALUE_SENDER_N = [20]byte{0xbf, 0x45, 0xc1, 0x66}
+	var MAGIC_VALUE_SIGFAIL_N = [20]byte{0x31, 0x66, 0x54, 0x94}
+
+	if magicExpected != common.Bytes2Hex(MAGIC_VALUE_SENDER_N[:]) {
+		if magicExpected == common.Bytes2Hex(MAGIC_VALUE_SIGFAIL_N[:]) {
 			return 0, 0, errors.New("account signature error")
 		}
+
 		return 0, 0, errors.New("account did not return correct MAGIC_VALUE")
 	}
+
 	return validAfter, validUntil, nil
 }
 
@@ -536,7 +542,9 @@ func validatePaymasterReturnData(data []byte) (context []byte, validAfter, valid
 		return nil, 0, 0, err
 	}
 	magicExpected, validUntil, validAfter := UnpackValidationData(validationData)
-	if magicExpected != MAGIC_VALUE_PAYMASTER {
+
+	var MAGIC_VALUE_PAYMASTER_N = [20]byte{0xe0, 0xe6, 0x18, 0x3a}
+	if magicExpected != common.Bytes2Hex(MAGIC_VALUE_PAYMASTER_N[:]) {
 		return nil, 0, 0, errors.New("paymaster did not return correct MAGIC_VALUE")
 	}
 	return context, validAfter, validUntil, nil

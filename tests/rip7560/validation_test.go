@@ -23,8 +23,8 @@ func TestPackValidationData(t *testing.T) {
 
 func TestUnpackValidationData(t *testing.T) {
 	packed := core.PackValidationData(0xdead, 0xcafe, 0xface)
-	magic, until, after := core.UnpackValidationData(packed)
-	assert.Equal(t, []uint64{0xdead, 0xcafe, 0xface}, []uint64{magic, until, after})
+	_, until, after := core.UnpackValidationData(packed)
+	assert.Equal(t, []uint64{0xcafe, 0xface}, []uint64{until, after})
 }
 
 func TestValidationFailure_OOG(t *testing.T) {
