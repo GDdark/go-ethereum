@@ -377,14 +377,15 @@ func (miner *Miner) commitRip7560TransactionsBundle(env *environment, txs *types
 
 	// todo: copied over to fix crash, probably should do it once
 	gasLimit := env.header.GasLimit
-	var snap = env.state.Snapshot()
+	var stateCopied = env.state.Copy()
+
 	if env.gasPool == nil {
 		env.gasPool = new(core.GasPool).AddGas(gasLimit)
 	}
 
 	validatedTxs, receipts, _, err := core.HandleRip7560Transactions(txs.Transactions, 0, env.state, &env.coinbase, env.header, env.gasPool, miner.chainConfig, miner.chain, vm.Config{})
 	if err != nil {
-		env.state.RevertToSnapshot(snap)
+		env.state = stateCopied
 		return err
 	}
 
